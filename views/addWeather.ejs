@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ("./partials/header.ejs") %>
+
+  <body>
+    <%- include ("./partials/nav.ejs") %>
+
+    <h1>Add Weather Data</h1>
+    <form action="/weather" method="POST">
+      <label for="cityId">City:</label>
+      <select name="cityId" id="cityId">
+        <% cities.forEach(city=> { %>
+        <option value="<%= city._id %>"><%= city.name %></option>
+        <% }); %>
+      </select>
+      <br />
+      <label for="date">Date:</label>
+      <input type="date" name="date" id="date" required />
+      <br />
+      <label for="temperature">Temperature:</label>
+      <input type="number" name="temperature" id="temperature" required />
+      <br />
+      <label for="humidity">Humidity:</label>
+      <input type="number" name="humidity" id="humidity" required />
+      <br />
+      <label for="windSpeed">Wind Speed:</label>
+      <input type="number" name="windSpeed" id="windSpeed" required />
+      <br />
+      <label for="conditions">Conditions:</label>
+      <input type="text" name="conditions" id="conditions" required />
+      <br />
+      <button type="submit">Add Weather Data</button>
+    </form>
+
+    <%- include ("./partials/Footer.ejs") %>
+  </body>
+</html>

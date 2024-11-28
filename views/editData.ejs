@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ("./partials/header.ejs") %>
+
+  <body>
+    <%- include ("./partials/nav.ejs") %>
+    <div class="container">
+      <h1>Edit City Data</h1>
+      <select name="" id="citySelect">
+        <% cities.forEach(city => { %>
+        <option value="<%= city._id %>"><%= city.name %></option>
+        <% }); %>
+      </select>
+      <div id="editForm">
+        <h2>Edit weather for <span id="cityName"></span></h2>
+        <form action="" id="editWeatherForm">
+          <label for="date">Date:</label>
+          <input type="date" id="date" name="date" /><br />
+          <label for="temperature">Tempearture (•C):</label>
+          <input type="number" name="temperature" id="temperature" /><br />
+          <label for="humidity">Humidity (%):</label>
+          <input type="number" name="humidity" id="humidity" /><br />
+          <label for="windSpeed">Wind Speed (km/h):</label>
+          <input type="number" name="windSpeed" id="windSpeed" /><br />
+          <label for="conditions">Conditions: </label>
+          <input type="text" name="conditions" id="conditions" /><br />
+
+          <button type="submit">Update Data</button>
+         
+        </form>
+      </div>
+    </div>
+
+    <%- include ("./partials/Footer.ejs") %>
+    <script>
+  const citySelect = document.getElementById("citySelect");
+  const editForm = document.getElementById("editForm");
+  const editWeatherForm = document.getElementById("editWeatherForm");
+  const cityNameSpan = document.getElementById("cityName");
+
+  citySelect.addEventListener("change", () => {
+    const cityId = citySelect.value;
+    fetch(`/weather/${cityId}`)
+      .then(response => response.json())
+      .then(weatherData => {
+        if (weatherData.currentWeather) {
+          cityNameSpan.textContent = citySelect.options[citySelect.selectedIndex].text;
+          editWeatherForm.date.value = weatherData.currentWeather.date;
+          editWeatherForm.temperature.value = weatherData.currentWeather.temperature;
+          editWeatherForm.humidity.value = weatherData.currentWeather.humidity;
+          editWeatherForm.windSpeed.value = weatherData.currentWeather.windSpeed;
+          editWeatherForm.conditions.value = weatherData.currentWeather.conditions;
+
+          editForm.style.display = "block";
+        } else {
+          editForm.style.display = "none";
+        }
+      })
+      .catch(error => console.error("Error fetching weather data:", error));
+  });
+
+  editWeatherForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+
+    const cityId = citySelect.value;
+    const formData = new FormData(editWeatherForm);
+    const data = {};
+    formData.forEach((value, key) => {
+      data[key] = value;
+    });
+
+    fetch(`/weather/${cityId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data),
+    })
+      .then(response => {
+        if (response.ok) {
+          alert("Weather data updated successfully!");
+          window.location.href = "/data";
+        } else {
+          alert("Failed to update weather data.");
+        }
+      })
+      .catch(error => console.error("Error updating weather data:", error));
+  });
+
+    </script>
+  </body>
+</html>

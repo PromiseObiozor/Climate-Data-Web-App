@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <%- include ("./partials/header.ejs") %>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <%# source: https://www.chartjs.org %>
+
+  <body>
+    <%- include ("./partials/nav.ejs") %>
+    <div class="container">
+      <h1>Select a City</h1>
+      <select id="citySelect">
+        <% cities.forEach(city=> { %>
+        <option value="<%= city._id %>"><%= city.name %></option>
+        <% }); %>
+      </select>
+      <div id="weatherDetails"></div>
+      <canvas id="weatherChart"></canvas>
+    </div>
+
+    <%- include ("./partials/Footer.ejs") %>
+
+    <script>
+      const citySelect = document.getElementById("citySelect");
+      const weatherDetails = document.getElementById("weatherDetails");
+      const weatherChartCanvas = document.getElementById("weatherChart");
+      let weatherChart;
+
+      function fetchWeatherDetails(cityId) {
+        fetch(`/weather/${cityId}`)
+          .then((response) => {
+            if (!response.ok) {
+              throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then((data) => {
+            if (!data.currentWeather) {
+              weatherDetails.innerHTML =
+                "<p>No weather data available for this city.</p>";
+              return; // Exit the function early
+            }
+
+            weatherDetails.innerHTML = `
+                <h2>Current Weather for ${
+                  data.currentWeather.cityName || ""
+                }</h2>
+                <p>Date: ${new Date(
+                  data.currentWeather.date
+                ).toLocaleDateString()}</p>
+                <p>Temperature: ${data.currentWeather.temperature} °C</p>
+                <p>Humidity: ${data.currentWeather.humidity}%</p>
+                <p>Wind Speed: ${data.currentWeather.windSpeed} km/h</p>
+                <p>Conditions: ${data.currentWeather.conditions}</p>
+            `;
+
+            // Chart.js setup and update
+            const labels = data.historicalWeather.map((d) =>
+              new Date(d.date).toLocaleDateString()
+            );
+            const temperatures = data.historicalWeather.map(
+              (d) => d.temperature
+            );
+
+            const chartData = {
+              labels: labels,
+              datasets: [
+                {
+                  label: "Temperature (°C)",
+                  data: temperatures,
+                  borderColor: "rgba(75, 192, 192, 1)",
+                  backgroundColor: "rgba(75, 192, 192, 0.2)",
+                },
+              ],
+            };
+
+            if (weatherChart) {
+              weatherChart.data = chartData;
+              weatherChart.update();
+            } else {
+              weatherChart = new Chart(weatherChartCanvas, {
+                type: "line",
+                data: chartData,
+                options: {
+                  scales: {
+                    y: {
+                      beginAtZero: true,
+                    },
+                  },
+                },
+              });
+            }
+          })
+          .catch((error) => {
+            console.error("Error fetching weather data:", error);
+            weatherDetails.innerHTML =
+              "<p>Error fetching weather data. Please try again later.</p>";
+          });
+      }
+
+      citySelect.addEventListener("change", () => {
+        fetchWeatherDetails(citySelect.value);
+      });
+
+      // Fetch initial data on page load if a city is selected
+      if (citySelect.value) {
+        fetchWeatherDetails(citySelect.value);
+      }
+    </script>
+  </body>
+</html>
